@@ -128,8 +128,14 @@ class ELBConnection(AWSQueryConnection):
         if load_balancer_names:
             self.build_list_params(params, load_balancer_names,
                                    'LoadBalancerNames.member.%d')
-        return self.get_list('DescribeLoadBalancers', params,
+        try:
+            return self.get_list('DescribeLoadBalancers', params,
                              [('member', LoadBalancer)])
+        except BotoServerException as error:
+            if error.error_code == "LoadBalancerNotFound":
+                return [];
+            else:
+                raise
 
     def create_load_balancer(self, name, zones, listeners, subnets=None,
         security_groups=None, scheme='internet-facing'):
