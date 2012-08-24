@@ -23,11 +23,12 @@ import json
 
 import boto
 import boto.jsonresponse
-from boto.resultset import ResultSet
+from boto.iam.group import Group
 from boto.iam.instanceprofile import InstanceProfile
 from boto.iam.role import Role
 from boto.iam.servercertificate import ServerCertificate
 from boto.iam.summarymap import SummaryMap
+from boto.iam.user import User
 from boto.connection import AWSQueryConnection
 
 
@@ -99,6 +100,9 @@ class IAMConnection(AWSQueryConnection):
         :type max_items: int
         :param max_items: Use this only when paginating results to indicate
             the maximum number of groups you want in the response.
+
+        :rtype: list
+        :return: A list of :class:`boto.iam.group.Group`
         """
         params = {}
         if path_prefix:
@@ -107,8 +111,8 @@ class IAMConnection(AWSQueryConnection):
             params['Marker'] = marker
         if max_items:
             params['MaxItems'] = max_items
-        return self.get_response('ListGroups', params,
-                                 list_marker='Groups')
+        return self.get_list('ListGroups', params,
+                            [('member', Group)])
 
     def get_group(self, group_name, marker=None, max_items=None):
         """
@@ -126,13 +130,16 @@ class IAMConnection(AWSQueryConnection):
         :type max_items: int
         :param max_items: Use this only when paginating results to indicate
             the maximum number of groups you want in the response.
+
+        :rtype: :class:`boto.iam.group.Group`
+        :return: The requested Group instance
         """
         params = {'GroupName': group_name}
         if marker:
             params['Marker'] = marker
         if max_items:
             params['MaxItems'] = max_items
-        return self.get_response('GetGroup', params, list_marker='Users')
+        return self.get_object('GetGroup', params, Group)
 
     def create_group(self, group_name, path='/'):
         """
@@ -144,10 +151,13 @@ class IAMConnection(AWSQueryConnection):
         :type path: string
         :param path: The path to the group (Optional).  Defaults to /.
 
+        :rtype: :class:`boto.iam.group.Group`
+        :return: The newly created Group instance
         """
         params = {'GroupName': group_name,
                   'Path': path}
-        return self.get_response('CreateGroup', params)
+        return self.get_object('CreateGroup', params,
+                Group, verb='POST')
 
     def delete_group(self, group_name):
         """
@@ -305,13 +315,17 @@ class IAMConnection(AWSQueryConnection):
         :type max_items: int
         :param max_items: Use this only when paginating results to indicate
             the maximum number of groups you want in the response.
+
+        :rtype: list
+        :return: A list of :class:`boto.iam.user.User`
         """
         params = {'PathPrefix': path_prefix}
         if marker:
             params['Marker'] = marker
         if max_items:
             params['MaxItems'] = max_items
-        return self.get_response('ListUsers', params, list_marker='Users')
+        return self.get_list('ListUsers', params,
+            [('member', User)])
 
     #
     # User methods
@@ -328,10 +342,13 @@ class IAMConnection(AWSQueryConnection):
         :param path: The path in which the user will be created.
             Defaults to /.
 
+        :rtype: :class:`boto.iam.user.User`
+        :return: The newly created User instance
         """
         params = {'UserName': user_name,
                   'Path': path}
-        return self.get_response('CreateUser', params)
+        return self.get_object('CreateUser', params,
+                User, verb='POST')
 
     def delete_user(self, user_name):
         """
@@ -357,11 +374,14 @@ class IAMConnection(AWSQueryConnection):
         :type user_name: string
         :param user_name: The name of the user to delete.
             If not specified, defaults to user making request.
+
+        :rtype: :class:`boto.iam.user.User`
+        :return: The requested User instance
         """
         params = {}
         if user_name:
             params['UserName'] = user_name
-        return self.get_response('GetUser', params)
+        return self.get_object('GetUser', params, User)
 
     def update_user(self, user_name, new_user_name=None, new_path=None):
         """
@@ -695,7 +715,7 @@ class IAMConnection(AWSQueryConnection):
         :type max_items: int
         :param max_items: Use this only when paginating results to indicate
             the maximum number of groups you want in the response.
-        
+
         :rtype: list
         :return: A list of :class:`boto.iam.servercertificate.ServerCertificate`
         """
@@ -782,14 +802,14 @@ class IAMConnection(AWSQueryConnection):
         :type cert_name: string
         :param cert_name: The name of the server certificate you want
             to retrieve information about.
-        
+
         :rtype: :class:`boto.iam.servercertificate.ServerCertificate`
         :return: The requested ServerCertificate instance
         """
         params = {'ServerCertificateName': cert_name}
         return self.get_object('GetServerCertificate', params,
                 ServerCertificate)
-    
+
     def delete_server_cert(self, cert_name):
         """
         Delete the specified server certificate.
@@ -1078,7 +1098,7 @@ class IAMConnection(AWSQueryConnection):
 
         :type path: string
         :param path: The path to the instance profile.
-        
+
         :rtype: :class:`boto.iam.role.Role`
         :return: The newly created Role instance
         """
@@ -1139,7 +1159,7 @@ class IAMConnection(AWSQueryConnection):
         :type instance_profile_name: string
         :param instance_profile_name: Name of the instance profile to get
             information about.
-        
+
         :rtype: :class:`boto.iam.instanceprofile.InstanceProfile`
         :return: The requested InstanceProfile instance
         """
@@ -1160,7 +1180,7 @@ class IAMConnection(AWSQueryConnection):
         """
         return self.get_object('GetRole',
                 {'RoleName': role_name}, Role)
-    
+
     def get_role_policy(self, role_name, policy_name):
         """
         Retrieves the specified policy document for the specified role.
@@ -1196,7 +1216,7 @@ class IAMConnection(AWSQueryConnection):
         :type max_items: int
         :param max_items: Use this parameter only when paginating results to
             indicate the maximum number of user names you want in the response.
-        
+
         :rtype: list
         :return: A list of :class:`boto.iam.instanceprofile.InstanceProfile`
         """
@@ -1283,7 +1303,7 @@ class IAMConnection(AWSQueryConnection):
         :type max_items: int
         :param max_items: Use this parameter only when paginating results to
             indicate the maximum number of user names you want in the response.
- 
+
         :rtype: list
         :return: A list of :class:`boto.iam.role.Role`
         """
