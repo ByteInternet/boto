@@ -496,14 +496,17 @@ class IAMConnection(AWSQueryConnection):
         :type max_items: int
         :param max_items: Use this only when paginating results to indicate
             the maximum number of groups you want in the response.
+
+        :rtype: list
+        :return: A list of :class:`boto.iam.group.Group`
         """
         params = {'UserName': user_name}
         if marker:
             params['Marker'] = marker
         if max_items:
             params['MaxItems'] = max_items
-        return self.get_response('ListGroupsForUser', params,
-                                 list_marker='Groups')
+        return self.get_list('ListGroupsForUser', params,
+                            [('member', Group)])
 
     #
     # Access Keys
