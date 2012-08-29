@@ -24,11 +24,11 @@ import json
 import boto
 import boto.jsonresponse
 from boto.connection import AWSQueryConnection
-from boto.iam.summarymap import SummaryMap
-from boto.iam.servercertificate import ServerCertificate
 from boto.iam.group import Group
 from boto.iam.instanceprofile import InstanceProfile
 from boto.iam.role import Role
+from boto.iam.servercertificate import ServerCertificate
+from boto.iam.summarymap import SummaryMap
 from boto.iam.user import User
 from boto.resultset import ResultSet
 
