@@ -23,10 +23,12 @@ import json
 
 import boto
 import boto.jsonresponse
-from boto.resultset import ResultSet
+from boto.connection import AWSQueryConnection
 from boto.iam.summarymap import SummaryMap
 from boto.iam.servercertificate import ServerCertificate
-from boto.connection import AWSQueryConnection
+from boto.iam.group import Group
+from boto.iam.user import User
+from boto.resultset import ResultSet
 
 
 ASSUME_ROLE_POLICY_DOCUMENT = json.dumps({
@@ -97,6 +99,9 @@ class IAMConnection(AWSQueryConnection):
         :type max_items: int
         :param max_items: Use this only when paginating results to indicate
             the maximum number of groups you want in the response.
+
+        :rtype: list
+        :return: A list of :class:`boto.iam.group.Group`
         """
         params = {}
         if path_prefix:
@@ -105,8 +110,8 @@ class IAMConnection(AWSQueryConnection):
             params['Marker'] = marker
         if max_items:
             params['MaxItems'] = max_items
-        return self.get_response('ListGroups', params,
-                                 list_marker='Groups')
+        return self.get_list('ListGroups', params,
+                [('member', Group)])
 
     def get_group(self, group_name, marker=None, max_items=None):
         """
@@ -124,13 +129,16 @@ class IAMConnection(AWSQueryConnection):
         :type max_items: int
         :param max_items: Use this only when paginating results to indicate
             the maximum number of groups you want in the response.
+
+        :rtype: :class:`boto.iam.group.Group`
+        :return: The requested Group instance
         """
         params = {'GroupName': group_name}
         if marker:
             params['Marker'] = marker
         if max_items:
             params['MaxItems'] = max_items
-        return self.get_response('GetGroup', params, list_marker='Users')
+        return self.get_object('GetGroup', params, Group)
 
     def create_group(self, group_name, path='/'):
         """
@@ -142,10 +150,13 @@ class IAMConnection(AWSQueryConnection):
         :type path: string
         :param path: The path to the group (Optional).  Defaults to /.
 
+        :rtype: :class:`boto.iam.group.Group`
+        :return: The newly created Group instance
         """
         params = {'GroupName': group_name,
                   'Path': path}
-        return self.get_response('CreateGroup', params)
+        return self.get_object('CreateGroup', params,
+                Group, verb='POST')
 
     def delete_group(self, group_name):
         """
@@ -303,13 +314,17 @@ class IAMConnection(AWSQueryConnection):
         :type max_items: int
         :param max_items: Use this only when paginating results to indicate
             the maximum number of groups you want in the response.
+
+        :rtype: list
+        :return: A list of :class:`boto.iam.user.User`
         """
         params = {'PathPrefix': path_prefix}
         if marker:
             params['Marker'] = marker
         if max_items:
             params['MaxItems'] = max_items
-        return self.get_response('ListUsers', params, list_marker='Users')
+        return self.get_list('ListUsers', params,
+                [('member', User)])
 
     #
     # User methods
@@ -326,10 +341,13 @@ class IAMConnection(AWSQueryConnection):
         :param path: The path in which the user will be created.
             Defaults to /.
 
+        :rtype: :class:`boto.iam.user.User`
+        :return: The newly created User instance
         """
         params = {'UserName': user_name,
                   'Path': path}
-        return self.get_response('CreateUser', params)
+        return self.get_object('CreateUser', params,
+                User, verb='POST')
 
     def delete_user(self, user_name):
         """
@@ -355,11 +373,14 @@ class IAMConnection(AWSQueryConnection):
         :type user_name: string
         :param user_name: The name of the user to delete.
             If not specified, defaults to user making request.
+
+        :rtype: :class:`boto.iam.user.User`
+        :return: The requested User instance
         """
         params = {}
         if user_name:
             params['UserName'] = user_name
-        return self.get_response('GetUser', params)
+        return self.get_object('GetUser', params, User)
 
     def update_user(self, user_name, new_user_name=None, new_path=None):
         """
@@ -474,14 +495,17 @@ class IAMConnection(AWSQueryConnection):
         :type max_items: int
         :param max_items: Use this only when paginating results to indicate
             the maximum number of groups you want in the response.
+
+        :rtype: list
+        :return: A list of :class:`boto.iam.group.Group`
         """
         params = {'UserName': user_name}
         if marker:
             params['Marker'] = marker
         if max_items:
             params['MaxItems'] = max_items
-        return self.get_response('ListGroupsForUser', params,
-                                 list_marker='Groups')
+        return self.get_list('ListGroupsForUser', params,
+                [('member', Group)])
 
     #
     # Access Keys
