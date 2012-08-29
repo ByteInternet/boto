@@ -27,6 +27,8 @@ from boto.connection import AWSQueryConnection
 from boto.iam.summarymap import SummaryMap
 from boto.iam.servercertificate import ServerCertificate
 from boto.iam.group import Group
+from boto.iam.instanceprofile import InstanceProfile
+from boto.iam.role import Role
 from boto.iam.user import User
 from boto.resultset import ResultSet
 
@@ -1077,11 +1079,15 @@ class IAMConnection(AWSQueryConnection):
 
         :type path: string
         :param path: The path to the instance profile.
+
+        :rtype: :class:`boto.iam.instanceprofile.InstanceProfile`
+        :return: The newly created InstanceProfile instance
         """
         params = {'InstanceProfileName': instance_profile_name}
         if path is not None:
             params['Path'] = path
-        return self.get_response('CreateInstanceProfile', params)
+        return self.get_object('CreateInstanceProfile', params,
+                InstanceProfile, verb='POST')
 
     def create_role(self, role_name, assume_role_policy_document=None, path=None):
         """
@@ -1100,6 +1106,9 @@ class IAMConnection(AWSQueryConnection):
 
         :type path: string
         :param path: The path to the instance profile.
+
+        :rtype: :class:`boto.iam.role.Role`
+        :return: The newly created Role instance
         """
         params = {'RoleName': role_name}
         if assume_role_policy_document is None:
@@ -1111,7 +1120,8 @@ class IAMConnection(AWSQueryConnection):
             params['AssumeRolePolicyDocument'] =  assume_role_policy_document
         if path is not None:
             params['Path'] = path
-        return self.get_response('CreateRole', params)
+        return self.get_object('CreateRole', params,
+                Role, verb='POST')
 
     def delete_instance_profile(self, instance_profile_name):
         """
@@ -1157,9 +1167,12 @@ class IAMConnection(AWSQueryConnection):
         :type instance_profile_name: string
         :param instance_profile_name: Name of the instance profile to get
             information about.
+
+        :rtype: :class:`boto.iam.instanceprofile.InstanceProfile`
+        :return: The requested InstanceProfile instance
         """
-        return self.get_response('GetInstanceProfile', {'InstanceProfileName':
-                                                       instance_profile_name})
+        return self.get_object('GetInstanceProfile', {'InstanceProfileName':
+            instance_profile_name}, InstanceProfile)
 
     def get_role(self, role_name):
         """
@@ -1169,8 +1182,12 @@ class IAMConnection(AWSQueryConnection):
 
         :type role_name: string
         :param role_name: Name of the role associated with the policy.
+
+        :rtype: :class:`boto.iam.role.Role`
+        :return: The requested Role instance
         """
-        return self.get_response('GetRole', {'RoleName': role_name})
+        return self.get_object('GetRole',
+                {'RoleName': role_name}, Role)
 
     def get_role_policy(self, role_name, policy_name):
         """
@@ -1207,6 +1224,9 @@ class IAMConnection(AWSQueryConnection):
         :type max_items: int
         :param max_items: Use this parameter only when paginating results to
             indicate the maximum number of user names you want in the response.
+
+        :rtype: list
+        :return: A list of :class:`boto.iam.instanceprofile.InstanceProfile`
         """
         params = {}
         if path_prefix is not None:
@@ -1216,8 +1236,8 @@ class IAMConnection(AWSQueryConnection):
         if max_items is not None:
             params['MaxItems'] = max_items
 
-        return self.get_response('ListInstanceProfiles', params,
-                                 list_marker='InstanceProfiles')
+        return self.get_list('ListInstanceProfiles', params,
+                [('member', InstanceProfile)])
 
     def list_instance_profiles_for_role(self, role_name, marker=None,
                                         max_items=None):
@@ -1237,14 +1257,17 @@ class IAMConnection(AWSQueryConnection):
         :type max_items: int
         :param max_items: Use this parameter only when paginating results to
             indicate the maximum number of user names you want in the response.
+
+        :rtype: list
+        :return: A list of :class:`boto.iam.instanceprofile.InstanceProfile`
         """
         params = {'RoleName': role_name}
         if marker is not None:
             params['Marker'] = marker
         if max_items is not None:
             params['MaxItems'] = max_items
-        return self.get_response('ListInstanceProfilesForRole', params,
-                                 list_marker='InstanceProfiles')
+        return self.get_list('ListInstanceProfilesForRole', params,
+                [('member',InstanceProfile)])
 
     def list_role_policies(self, role_name, marker=None, max_items=None):
         """
@@ -1289,6 +1312,9 @@ class IAMConnection(AWSQueryConnection):
         :type max_items: int
         :param max_items: Use this parameter only when paginating results to
             indicate the maximum number of user names you want in the response.
+
+        :rtype: list
+        :return: A list of :class:`boto.iam.role.Role`
         """
         params = {}
         if path_prefix is not None:
@@ -1297,7 +1323,8 @@ class IAMConnection(AWSQueryConnection):
             params['Marker'] = marker
         if max_items is not None:
             params['MaxItems'] = max_items
-        return self.get_response('ListRoles', params, list_marker='Roles')
+        return self.get_list('ListRoles', params,
+                [('member',Role)])
 
     def put_role_policy(self, role_name, policy_name, policy_document):
         """
