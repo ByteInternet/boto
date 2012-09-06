@@ -674,7 +674,7 @@ class IAMConnection(AWSQueryConnection):
     # Server Certificates
     #
 
-    def get_all_server_certs(self, path_prefix='/',
+    def list_server_certs(self, path_prefix='/',
                              marker=None, max_items=None):
         """
         Lists the server certificates that have the specified path prefix.
@@ -693,7 +693,7 @@ class IAMConnection(AWSQueryConnection):
         :type max_items: int
         :param max_items: Use this only when paginating results to indicate
             the maximum number of groups you want in the response.
-        
+
         :rtype: list
         :return: A list of :class:`boto.iam.servercertificate.ServerCertificate`
         """
@@ -706,6 +706,10 @@ class IAMConnection(AWSQueryConnection):
             params['MaxItems'] = max_items
         return self.get_list('ListServerCertificates', params,
                 [('member',ServerCertificate)])
+
+    # Preserves backwards compatibility.
+    # TODO: Look into deprecating this eventually?
+    get_all_server_certs = list_server_certs
 
     def update_server_cert(self, cert_name, new_cert_name=None,
                            new_path=None):
@@ -780,14 +784,14 @@ class IAMConnection(AWSQueryConnection):
         :type cert_name: string
         :param cert_name: The name of the server certificate you want
             to retrieve information about.
-        
+
         :rtype: :class:`boto.iam.servercertificate.ServerCertificate`
         :return: The requested ServerCertificate instance
         """
         params = {'ServerCertificateName': cert_name}
         return self.get_object('GetServerCertificate', params,
                 ServerCertificate)
-    
+
     def delete_server_cert(self, cert_name):
         """
         Delete the specified server certificate.

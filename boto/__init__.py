@@ -27,6 +27,7 @@ from boto.pyami.config import Config, BotoConfigLocations
 from boto.storage_uri import BucketStorageUri, FileStorageUri
 import boto.plugin
 import os
+import platform
 import re
 import sys
 import logging
@@ -598,6 +599,23 @@ def connect_cloudsearch(aws_access_key_id=None,
                   **kwargs)
 
 
+def connect_beanstalk(aws_access_key_id=None,
+                      aws_secret_access_key=None,
+                      **kwargs):
+    """
+    :type aws_access_key_id: string
+    :param aws_access_key_id: Your AWS Access Key ID
+
+    :type aws_secret_access_key: string
+    :param aws_secret_access_key: Your AWS Secret Access Key
+
+    :rtype: :class:`boto.beanstalk.layer1.Layer1`
+    :return: A connection to Amazon's Elastic Beanstalk service
+    """
+    from boto.beanstalk.layer1 import Layer1
+    return Layer1(aws_access_key_id, aws_secret_access_key, **kwargs)
+
+
 def storage_uri(uri_str, default_scheme='file', debug=0, validate=True,
                 bucket_storage_uri_class=BucketStorageUri,
                 suppress_consec_slashes=True):
@@ -630,7 +648,8 @@ def storage_uri(uri_str, default_scheme='file', debug=0, validate=True,
     * s3://bucket/name
     * gs://bucket
     * s3://bucket
-    * filename
+    * filename (which could be a Unix path like /a/b/c or a Windows path like
+      C:\a\b\c)
 
     The last example uses the default scheme ('file', unless overridden)
     """
@@ -643,8 +662,14 @@ def storage_uri(uri_str, default_scheme='file', debug=0, validate=True,
         # Check for common error: user specifies gs:bucket instead
         # of gs://bucket. Some URI parsers allow this, but it can cause
         # confusion for callers, so we don't.
-        if uri_str.find(':') != -1:
-            raise InvalidUriError('"%s" contains ":" instead of "://"' % uri_str)
+        colon_pos = uri_str.find(':')
+        if colon_pos != -1:
+            # Allow Windows path names including drive letter (C: etc.)
+            drive_char = uri_str[0].lower()
+            if not (platform.system().lower().startswith('windows')
+                    and colon_pos == 1
+                    and drive_char >= 'a' and drive_char <= 'z'):
+              raise InvalidUriError('"%s" contains ":" instead of "://"' % uri_str)
         scheme = default_scheme.lower()
         path = uri_str
     else:

@@ -972,12 +972,19 @@ class EC2Connection(AWSQueryConnection):
 
         :type product_description: str
         :param product_description: Filter responses to a particular platform.
-            Valid values are currently: "Linux/UNIX", "SUSE Linux",
-            and "Windows"
+            Valid values are currently:
+
+            * Linux/UNIX
+            * SUSE Linux
+            * Windows
+            * Linux/UNIX (Amazon VPC)
+            * SUSE Linux (Amazon VPC)
+            * Windows (Amazon VPC)
 
         :type availability_zone: str
         :param availability_zone: The availability zone for which prices
-            should be returned
+            should be returned.  If not specified, data for all
+            availability zones will be returned.
 
         :rtype: list
         :return: A list tuples containing price and timestamp.
@@ -1378,6 +1385,10 @@ class EC2Connection(AWSQueryConnection):
         This requires one of ``public_ip`` or ``allocation_id`` depending
         on if you're associating a VPC address or a plain EC2 address.
 
+        When using an Allocation ID, make sure to pass ``None`` for ``public_ip`` 
+        as EC2 expects a single parameter and if ``public_ip`` is passed boto 
+        will preference that instead of ``allocation_id``.
+        
         :type instance_id: string
         :param instance_id: The ID of the instance
 
@@ -1447,13 +1458,23 @@ class EC2Connection(AWSQueryConnection):
 
     def release_address(self, public_ip=None, allocation_id=None):
         """
-        Free up an Elastic IP address.
+        Free up an Elastic IP address.  Pass a public IP address to
+        release an EC2 Elastic IP address and an AllocationId to
+        release a VPC Elastic IP address.  You should only pass
+        one value.
+
+        This requires one of ``public_ip`` or ``allocation_id`` depending
+        on if you're associating a VPC address or a plain EC2 address.
+        
+        When using an Allocation ID, make sure to pass ``None`` for ``public_ip`` 
+        as EC2 expects a single parameter and if ``public_ip`` is passed boto 
+        will preference that instead of ``allocation_id``.
 
         :type public_ip: string
         :param public_ip: The public IP address for EC2 elastic IPs.
 
         :type allocation_id: string
-        :param allocation_id: The ID for VPC elastic IPs.
+        :param allocation_id: The Allocation ID for VPC elastic IPs.
 
         :rtype: bool
         :return: True if successful
@@ -3155,18 +3176,18 @@ class EC2Connection(AWSQueryConnection):
                   'DeviceIndex': device_index}
         return self.get_status('AttachNetworkInterface', params, verb='POST')
 
-    def detach_network_interface(self, network_interface_id, force=False):
+    def detach_network_interface(self, attachement_id, force=False):
         """
         Detaches a network interface from an instance.
 
-        :type network_interface_id: str
-        :param network_interface_id: The ID of the network interface to detach.
+        :type attachment_id: str
+        :param attachment_id: The ID of the attachment.
 
         :type force: bool
         :param force: Set to true to force a detachment.
 
         """
-        params = {'NetworkInterfaceId': network_interface_id}
+        params = {'AttachmentId': network_interface_id}
         if force:
             params['Force'] = 'true'
         return self.get_status('DetachNetworkInterface', params, verb='POST')
