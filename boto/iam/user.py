@@ -59,3 +59,27 @@ class User(object):
         else:
             setattr(self, name, value)
 
+
+    def modify(self, new_user_name=None, new_path=None):
+        """
+        Updates the name and/or the path of the user.
+
+        :type new_user_name: string
+        :param new_user_name: If provided, the name of the user will be
+            changed to this name.
+
+        :type new_path: string
+        :param new_path: If provided, the path of the certificate will be
+            changed to this path.
+        """
+        rs = self.connection.update_user(self.name,
+            new_user_name, new_path)
+
+        if rs:
+            if new_user_name:
+                self.name = new_user_name
+            if new_path:
+                self.path = new_path
+
+        return rs
+

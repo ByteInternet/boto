@@ -64,4 +64,64 @@ class Group(object):
         else:
             setattr(self, name, value)
 
+    def modify(self, new_group_name=None, new_path=None):
+        """
+        Updates the name and/or the path of the group.
 
+        :type new_group_name: string
+        :param new_group_name: If provided, the name of the group will be
+            changed to this name.
+
+        :type new_path: string
+        :param new_path: If provided, the path of the certificate will be
+            changed to this path.
+        """
+        rs = self.connection.update_group(self.name,
+            new_group_name, new_path)
+
+        if rs:
+            if new_group_name:
+                self.name = new_group_name
+            if new_path:
+                self.path = new_path
+
+        return rs
+
+    def add_user(self, user):
+        """
+        Add a user to the group
+
+        :type :class:`boto.iam.user.User`
+        :param user: instance of :class:`boto.iam.user.User` to add to the group
+        """
+        if not isinstance(user, User):
+            raise Exception, "user must be an instance of boto.iam.user.User"
+
+        rs = self.connection.add_user_to_group(self.name,
+                user.name)
+
+        # TODO: test
+        if rs:
+            self.users.append(user)
+
+        return rs
+
+    def remove_user(self, user):
+        """
+        Remove a user from the group
+
+        :type :class:`boto.iam.user.User`
+        :param user: instance of :class:`boto.iam.user.User` to remove from the group
+        """
+        if not isinstance(user, User):
+            raise Exception, "user must be an instance of boto.iam.user.User"
+
+        rs = self.connection.remove_user_from_group(self.name,
+                user.name)
+
+        # TODO: test
+        # TODO: what happens if user does not exist
+        if rs:
+            self.users.remove(user)
+
+        return rs
