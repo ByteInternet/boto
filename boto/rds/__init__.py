@@ -152,6 +152,7 @@ class RDSConnection(AWSQueryConnection):
                 # We did not handle the exception, so re-raise
                 raise
 
+
     def create_dbinstance(self,
                           id,
                           allocated_storage,
