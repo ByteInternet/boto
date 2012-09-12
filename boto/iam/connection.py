@@ -693,7 +693,7 @@ class IAMConnection(AWSQueryConnection):
         :type max_items: int
         :param max_items: Use this only when paginating results to indicate
             the maximum number of groups you want in the response.
-        
+
         :rtype: list
         :return: A list of :class:`boto.iam.servercertificate.ServerCertificate`
         """
@@ -784,14 +784,14 @@ class IAMConnection(AWSQueryConnection):
         :type cert_name: string
         :param cert_name: The name of the server certificate you want
             to retrieve information about.
-        
+
         :rtype: :class:`boto.iam.servercertificate.ServerCertificate`
         :return: The requested ServerCertificate instance
         """
         params = {'ServerCertificateName': cert_name}
         return self.get_object('GetServerCertificate', params,
                 ServerCertificate)
-    
+
     def delete_server_cert(self, cert_name):
         """
         Delete the specified server certificate.
