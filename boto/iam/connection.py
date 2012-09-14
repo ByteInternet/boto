@@ -28,6 +28,7 @@ import boto
 import boto.jsonresponse
 from boto.resultset import ResultSet
 from boto.iam.summarymap import SummaryMap
+from boto.iam.servercertificate import ServerCertificate
 from boto.connection import AWSQueryConnection
 
 
@@ -697,6 +698,8 @@ class IAMConnection(AWSQueryConnection):
         :param max_items: Use this only when paginating results to indicate
             the maximum number of groups you want in the response.
 
+        :rtype: list
+        :return: A list of :class:`boto.iam.servercertificate.ServerCertificate`
         """
         params = {}
         if path_prefix:
@@ -705,9 +708,8 @@ class IAMConnection(AWSQueryConnection):
             params['Marker'] = marker
         if max_items:
             params['MaxItems'] = max_items
-        return self.get_response('ListServerCertificates',
-                                 params,
-                                 list_marker='ServerCertificateMetadataList')
+        return self.get_list('ListServerCertificates', params,
+                [('member',ServerCertificate)])
 
     # Preserves backwards compatibility.
     # TODO: Look into deprecating this eventually?
@@ -765,6 +767,9 @@ class IAMConnection(AWSQueryConnection):
 
         :type path: string
         :param path: The path for the server certificate.
+
+        :rtype: :class:`boto.iam.servercertificate.ServerCertificate`
+        :return: The newly created ServerCertificate instance
         """
         params = {'ServerCertificateName': cert_name,
                   'CertificateBody': cert_body,
@@ -773,8 +778,8 @@ class IAMConnection(AWSQueryConnection):
             params['CertificateChain'] = cert_chain
         if path:
             params['Path'] = path
-        return self.get_response('UploadServerCertificate', params,
-                                 verb='POST')
+        return self.get_object('UploadServerCertificate', params,
+            ServerCertificate, verb='POST')
 
     def get_server_certificate(self, cert_name):
         """
@@ -784,9 +789,12 @@ class IAMConnection(AWSQueryConnection):
         :param cert_name: The name of the server certificate you want
             to retrieve information about.
 
+        :rtype: :class:`boto.iam.servercertificate.ServerCertificate`
+        :return: The requested ServerCertificate instance
         """
         params = {'ServerCertificateName': cert_name}
-        return self.get_response('GetServerCertificate', params)
+        return self.get_object('GetServerCertificate', params,
+                ServerCertificate)
 
     def delete_server_cert(self, cert_name):
         """
