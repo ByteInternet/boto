@@ -24,6 +24,8 @@ This module provides an interface to the Elastic Compute Cloud (EC2)
 load balancing service from AWS.
 """
 from boto.connection import AWSQueryConnection
+from boto.resultset import ResultSet
+from boto.exception import BotoServerError
 from boto.ec2.instanceinfo import InstanceInfo
 from boto.ec2.elb.loadbalancer import LoadBalancer
 from boto.ec2.elb.instancestate import InstanceState
@@ -129,8 +131,15 @@ class ELBConnection(AWSQueryConnection):
         if load_balancer_names:
             self.build_list_params(params, load_balancer_names,
                                    'LoadBalancerNames.member.%d')
-        return self.get_list('DescribeLoadBalancers', params,
+
+        try:
+            return self.get_list('DescribeLoadBalancers', params,
                              [('member', LoadBalancer)])
+        except BotoServerError as error:
+            if error.error_code == "LoadBalancerNotFound":
+                return ResultSet()
+            else:
+                raise error
 
     def create_load_balancer(self, name, zones, listeners, subnets=None,
         security_groups=None, scheme='internet-facing'):
