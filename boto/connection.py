@@ -955,8 +955,6 @@ class AWSQueryConnection(AWSAuthConnection):
             xml.sax.parseString(body, h)
             return rs
         else:
-            boto.log.error('%s %s' % (response.status, response.reason))
-            boto.log.error('%s' % body)
             raise self.ResponseError(response.status, response.reason, body)
 
     def get_object(self, action, params, cls, path='/',
@@ -975,8 +973,6 @@ class AWSQueryConnection(AWSAuthConnection):
             xml.sax.parseString(body, h)
             return obj
         else:
-            boto.log.error('%s %s' % (response.status, response.reason))
-            boto.log.error('%s' % body)
             raise self.ResponseError(response.status, response.reason, body)
 
     def get_status(self, action, params, path='/', parent=None, verb='GET'):
@@ -994,6 +990,4 @@ class AWSQueryConnection(AWSAuthConnection):
             xml.sax.parseString(body, h)
             return rs.status
         else:
-            boto.log.error('%s %s' % (response.status, response.reason))
-            boto.log.error('%s' % body)
             raise self.ResponseError(response.status, response.reason, body)
