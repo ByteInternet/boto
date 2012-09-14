@@ -203,8 +203,6 @@ class CloudFormationConnection(AWSQueryConnection):
             body = json.loads(body)
             return body['CreateStackResponse']['CreateStackResult']['StackId']
         else:
-            boto.log.error('%s %s' % (response.status, response.reason))
-            boto.log.error('%s' % body)
             raise self.ResponseError(response.status, response.reason, body)
 
     def update_stack(self, stack_name, template_body=None, template_url=None,
@@ -263,8 +261,6 @@ class CloudFormationConnection(AWSQueryConnection):
             body = json.loads(body)
             return body['UpdateStackResponse']['UpdateStackResult']['StackId']
         else:
-            boto.log.error('%s %s' % (response.status, response.reason))
-            boto.log.error('%s' % body)
             raise self.ResponseError(response.status, response.reason, body)
 
     def delete_stack(self, stack_name_or_id):
@@ -275,8 +271,6 @@ class CloudFormationConnection(AWSQueryConnection):
         if response.status == 200:
             return json.loads(body)
         else:
-            boto.log.error('%s %s' % (response.status, response.reason))
-            boto.log.error('%s' % body)
             raise self.ResponseError(response.status, response.reason, body)
 
     def describe_stack_events(self, stack_name_or_id=None, next_token=None):
@@ -297,8 +291,6 @@ class CloudFormationConnection(AWSQueryConnection):
         if response.status == 200:
             return json.loads(body)
         else:
-            boto.log.error('%s %s' % (response.status, response.reason))
-            boto.log.error('%s' % body)
             raise self.ResponseError(response.status, response.reason, body)
 
     def describe_stack_resources(self, stack_name_or_id=None,
@@ -327,8 +319,6 @@ class CloudFormationConnection(AWSQueryConnection):
         if response.status == 200:
             return json.loads(body)
         else:
-            boto.log.error('%s %s' % (response.status, response.reason))
-            boto.log.error('%s' % body)
             raise self.ResponseError(response.status, response.reason, body)
 
     def list_stack_resources(self, stack_name_or_id, next_token=None):
