@@ -995,8 +995,6 @@ class AWSQueryConnection(AWSAuthConnection):
         elif response.status == 404 or (response.status == 400 and re.search('<Code>.*NotFound.*</Code>', body)):
             raise self.ResponseError(response.status, response.reason, body)
         else:
-            boto.log.error('%s %s' % (response.status, response.reason))
-            boto.log.error('%s' % body)
             raise self.ResponseError(response.status, response.reason, body)
 
     def get_status(self, action, params, path='/', parent=None, verb='GET'):
@@ -1014,6 +1012,4 @@ class AWSQueryConnection(AWSAuthConnection):
             xml.sax.parseString(body, h)
             return rs.status
         else:
-            boto.log.error('%s %s' % (response.status, response.reason))
-            boto.log.error('%s' % body)
             raise self.ResponseError(response.status, response.reason, body)
