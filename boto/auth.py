@@ -340,8 +340,8 @@ class HmacAuthV4Handler(AuthHandler, HmacKeys):
         l = []
         for param in http_request.params:
             value = str(http_request.params[param])
-            l.append('%s=%s' % (urllib.quote(param, safe='/~'),
-                                urllib.quote(value, safe='~')))
+            l.append('%s=%s' % (urllib.quote(param, safe='-_.~'),
+                                urllib.quote(value, safe='-_.~')))
         l = sorted(l)
         return '&'.join(l)
 
@@ -366,6 +366,12 @@ class HmacAuthV4Handler(AuthHandler, HmacKeys):
         return http_request.path
 
     def payload(self, http_request):
+        body = http_request.body
+        # If the body is a file like object, we can use
+        # boto.utils.compute_hash, which will avoid reading
+        # the entire body into memory.
+        if hasattr(body, 'seek') and hasattr(body, 'read'):
+            return boto.utils.compute_hash(body, hash_algorithm=sha256)[0]
         return sha256(http_request.body).hexdigest()
 
     def canonical_request(self, http_request):

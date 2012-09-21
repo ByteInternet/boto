@@ -50,7 +50,7 @@ class CloudFormationConnection(AWSQueryConnection):
                  is_secure=True, port=None, proxy=None, proxy_port=None,
                  proxy_user=None, proxy_pass=None, debug=0,
                  https_connection_factory=None, region=None, path='/',
-                 converter=None, security_token=None):
+                 converter=None, security_token=None, validate_certs=True):
         if not region:
             region = RegionInfo(self, self.DefaultRegionName,
                 self.DefaultRegionEndpoint, CloudFormationConnection)
@@ -61,7 +61,8 @@ class CloudFormationConnection(AWSQueryConnection):
                                     proxy_user, proxy_pass,
                                     self.region.endpoint, debug,
                                     https_connection_factory, path,
-                                    security_token)
+                                    security_token,
+                                    validate_certs=validate_certs)
 
     def _required_auth_capability(self):
         return ['hmac-v4']
@@ -202,8 +203,6 @@ class CloudFormationConnection(AWSQueryConnection):
             body = json.loads(body)
             return body['CreateStackResponse']['CreateStackResult']['StackId']
         else:
-            boto.log.error('%s %s' % (response.status, response.reason))
-            boto.log.error('%s' % body)
             raise self.ResponseError(response.status, response.reason, body)
 
     def update_stack(self, stack_name, template_body=None, template_url=None,
@@ -262,8 +261,6 @@ class CloudFormationConnection(AWSQueryConnection):
             body = json.loads(body)
             return body['UpdateStackResponse']['UpdateStackResult']['StackId']
         else:
-            boto.log.error('%s %s' % (response.status, response.reason))
-            boto.log.error('%s' % body)
             raise self.ResponseError(response.status, response.reason, body)
 
     def delete_stack(self, stack_name_or_id):
@@ -274,8 +271,6 @@ class CloudFormationConnection(AWSQueryConnection):
         if response.status == 200:
             return json.loads(body)
         else:
-            boto.log.error('%s %s' % (response.status, response.reason))
-            boto.log.error('%s' % body)
             raise self.ResponseError(response.status, response.reason, body)
 
     def describe_stack_events(self, stack_name_or_id=None, next_token=None):
@@ -296,8 +291,6 @@ class CloudFormationConnection(AWSQueryConnection):
         if response.status == 200:
             return json.loads(body)
         else:
-            boto.log.error('%s %s' % (response.status, response.reason))
-            boto.log.error('%s' % body)
             raise self.ResponseError(response.status, response.reason, body)
 
     def describe_stack_resources(self, stack_name_or_id=None,
@@ -326,8 +319,6 @@ class CloudFormationConnection(AWSQueryConnection):
         if response.status == 200:
             return json.loads(body)
         else:
-            boto.log.error('%s %s' % (response.status, response.reason))
-            boto.log.error('%s' % body)
             raise self.ResponseError(response.status, response.reason, body)
 
     def list_stack_resources(self, stack_name_or_id, next_token=None):

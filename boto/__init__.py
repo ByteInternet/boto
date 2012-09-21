@@ -35,7 +35,7 @@ import logging.config
 import urlparse
 from boto.exception import InvalidUriError
 
-__version__ = '2.5.2'
+__version__ = '2.6.0'
 Version = __version__  # for backware compatibility
 
 UserAgent = 'Boto/%s (%s)' % (__version__, sys.platform)
@@ -55,7 +55,9 @@ class NullHandler(logging.Handler):
         pass
 
 log = logging.getLogger('boto')
+perflog = logging.getLogger('boto.perf')
 log.addHandler(NullHandler())
+perflog.addHandler(NullHandler())
 init_logging()
 
 # convenience function to set logging to a particular file
@@ -407,6 +409,23 @@ def connect_euca(host=None, aws_access_key_id=None, aws_secret_access_key=None,
     return EC2Connection(aws_access_key_id, aws_secret_access_key,
                          region=reg, port=port, path=path,
                          is_secure=is_secure, **kwargs)
+
+
+def connect_glacier(aws_access_key_id=None, aws_secret_access_key=None,
+                    **kwargs):
+    """
+    :type aws_access_key_id: string
+    :param aws_access_key_id: Your AWS Access Key ID
+
+    :type aws_secret_access_key: string
+    :param aws_secret_access_key: Your AWS Secret Access Key
+
+    :rtype: :class:`boto.glacier.layer2.Layer2`
+    :return: A connection to Amazon's Glacier Service
+    """
+    from boto.glacier.layer2 import Layer2
+    return Layer2(aws_access_key_id, aws_secret_access_key,
+                  **kwargs)
 
 
 def connect_ec2_endpoint(url, aws_access_key_id=None,

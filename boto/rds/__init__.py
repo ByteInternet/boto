@@ -1,4 +1,4 @@
-# Copyright (c) 2009 Mitch Garnaat http://garnaat.org/
+# Copyright (c) 2009-2012 Mitch Garnaat http://garnaat.org/
 #
 # Permission is hereby granted, free of charge, to any person obtaining a
 # copy of this software and associated documentation files (the
@@ -41,7 +41,7 @@ def regions():
     :return: A list of :class:`boto.rds.regioninfo.RDSRegionInfo`
     """
     return [RDSRegionInfo(name='us-east-1',
-                          endpoint='rds.us-east-1.amazonaws.com'),
+                          endpoint='rds.amazonaws.com'),
             RDSRegionInfo(name='eu-west-1',
                           endpoint='rds.eu-west-1.amazonaws.com'),
             RDSRegionInfo(name='us-west-1',
@@ -89,7 +89,7 @@ class RDSConnection(AWSQueryConnection):
                  is_secure=True, port=None, proxy=None, proxy_port=None,
                  proxy_user=None, proxy_pass=None, debug=0,
                  https_connection_factory=None, region=None, path='/',
-                 security_token=None):
+                 security_token=None, validate_certs=True):
         if not region:
             region = RDSRegionInfo(self, self.DefaultRegionName,
                                    self.DefaultRegionEndpoint)
@@ -100,7 +100,8 @@ class RDSConnection(AWSQueryConnection):
                                     proxy_user, proxy_pass,
                                     self.region.endpoint, debug,
                                     https_connection_factory, path,
-                                    security_token)
+                                    security_token,
+                                    validate_certs=validate_certs)
 
     def _required_auth_capability(self):
         return ['rds']
@@ -141,7 +142,6 @@ class RDSConnection(AWSQueryConnection):
         try:
             return self.get_list('DescribeDBInstances', params,
                              [('DBInstance', DBInstance)])
-
         except BotoServerError as error:
             if error.code == "DBInstanceNotFound":
                 # no dbinstnace found that matches our filters
