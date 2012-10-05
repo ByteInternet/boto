@@ -35,14 +35,14 @@ class HostedZone(object):
 
     def startElement(self, name, attrs, connection):
         if name == 'Config':
-            self.config = Config()
+            self.config = Config(self)
             return self.config
         else:
             return None
 
     def endElement(self, name, value, connection):
         if name == 'Id':
-            self.id = value
+            self.id = value.split('/')[2]
         elif name == 'Name':
             self.name = value
         elif name == 'Owner':
@@ -53,4 +53,20 @@ class HostedZone(object):
             self.caller_reference = value
         else:
             setattr(self, name, value)
-        
+
+class Config(object):
+
+    def __init__(self, parent=None):
+        self.parent = parent
+        self.comment = None
+
+    def startElement(self, name, attrs, connection):
+        pass
+
+
+    def endElement(self, name, value, connection):
+        if name == 'Comment':
+            self.comment = value
+        else:
+            setattr(self, name, value)
+
