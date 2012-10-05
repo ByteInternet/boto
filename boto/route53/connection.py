@@ -29,9 +29,9 @@ import boto
 from boto.connection import AWSAuthConnection
 from boto import handler
 from boto.resultset import ResultSet
+from boto.route53.hostedzone import HostedZone
 import boto.jsonresponse
 import exception
-import hostedzone
 
 HZXML = """<?xml version="1.0" encoding="UTF-8"?>
 <CreateHostedZoneRequest xmlns="%(xmlns)s">
@@ -129,11 +129,10 @@ class Route53Connection(AWSAuthConnection):
             raise exception.DNSServerError(response.status,
                                            response.reason,
                                            body)
-        e = boto.jsonresponse.Element(list_marker='NameServers',
-                                      item_marker=('NameServer',))
-        h = boto.jsonresponse.XmlHandler(e, None)
-        h.parse(body)
-        return e
+        obj = HostedZone(self)
+        h = boto.handler.XmlHandler(obj, self)
+        xml.sax.parseString(body, h)
+        return obj
 
     def get_hosted_zone_by_name(self, hosted_zone_name):
         """
