@@ -185,18 +185,17 @@ class Route53Connection(AWSAuthConnection):
                   'caller_ref': caller_ref,
                   'comment': comment,
                   'xmlns': self.XMLNameSpace}
-        xml = HZXML % params
-        uri = '/%s/hostedzone' % self.Version
+        xmlp = HZXML % params
+        uri  = '/%s/hostedzone' % self.Version
         response = self.make_request('POST', uri,
-                                     {'Content-Type': 'text/xml'}, xml)
+                                     {'Content-Type': 'text/xml'}, xmlp)
         body = response.read()
         boto.log.debug(body)
         if response.status == 201:
-            e = boto.jsonresponse.Element(list_marker='NameServers',
-                                          item_marker=('NameServer',))
-            h = boto.jsonresponse.XmlHandler(e, None)
-            h.parse(body)
-            return e
+            obj = HostedZone(self)
+            h = boto.handler.XmlHandler(obj, self)
+            xml.sax.parseString(body, h)
+            return obj
         else:
             raise exception.DNSServerError(response.status,
                                            response.reason,

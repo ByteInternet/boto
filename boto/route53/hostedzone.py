@@ -25,12 +25,13 @@
 class HostedZone(object):
 
     def __init__(self, id=None, name=None, owner=None, version=None,
-                 caller_reference=None, config=None):
+                 caller_reference=None, config=None, resource_recordset_count=None):
         self.id = id
         self.name = name
         self.owner = owner
         self.version = version
         self.caller_reference = caller_reference
+        self.resource_recordset_count = resource_recordset_count
         self.config = config
 
     def startElement(self, name, attrs, connection):
@@ -51,6 +52,8 @@ class HostedZone(object):
             self.version = value
         elif name == 'CallerReference':
             self.caller_reference = value
+        elif name == 'ResourceRecordSetCount':
+            self.resource_recordset_count = value
         else:
             setattr(self, name, value)
 
@@ -62,7 +65,6 @@ class Config(object):
 
     def startElement(self, name, attrs, connection):
         pass
-
 
     def endElement(self, name, value, connection):
         if name == 'Comment':
