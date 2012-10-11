@@ -25,19 +25,27 @@
 class HostedZone(object):
 
     def __init__(self, id=None, name=None, owner=None, version=None,
-                 caller_reference=None, config=None, resource_recordset_count=None):
+                 caller_reference=None, resource_recordset_count=None):
         self.id = id
         self.name = name
         self.owner = owner
         self.version = version
         self.caller_reference = caller_reference
         self.resource_recordset_count = resource_recordset_count
-        self.config = config
+        self.config = None
+        self.change_info = None
+        self.delegation_set = None
 
     def startElement(self, name, attrs, connection):
         if name == 'Config':
             self.config = Config(self)
             return self.config
+        elif name == 'ChangeInfo':
+            self.change_info = ChangeInfo(self)
+            return self.change_info
+        elif name == 'DelegationSet':
+            self.delegation_set = DelegationSet(self)
+            return self.delegation_set
         else:
             return None
 
@@ -69,6 +77,42 @@ class Config(object):
     def endElement(self, name, value, connection):
         if name == 'Comment':
             self.comment = value
+        else:
+            setattr(self, name, value)
+
+class ChangeInfo(object):
+
+    def __init__(self, parent=None):
+        self.parent = parent
+        self.id = None
+        self.status = None
+        self.submitted_at = None
+
+    def startElement(self, name, attrs, connection):
+        pass
+
+    def endElement(self, name, value, connection):
+        if name == 'Id':
+            self.id = value.split('/')[2]
+        elif name == 'Status':
+            self.status = value
+        elif name == 'SubmittedAt':
+            self.submitted_at = value
+        else:
+            setattr(self, name, value)
+
+class DelegationSet(object):
+
+    def __init__(self, parent=None):
+        self.parent = parent
+        self.name_servers = []
+
+    def startElement(self, name, attrs, connection):
+        pass
+
+    def endElement(self, name, value, connection):
+        if name == 'NameServer':
+            self.name_servers.append(value)
         else:
             setattr(self, name, value)
 
