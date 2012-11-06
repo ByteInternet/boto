@@ -19,17 +19,14 @@
 # WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
 # IN THE SOFTWARE.
-try:
-    import json
-except ImportError:
-    import simplejson as json
-
 import boto
 import boto.jsonresponse
+from boto.compat import json
 from boto.resultset import ResultSet
 from boto.iam.summarymap import SummaryMap
 from boto.iam.servercertificate import ServerCertificate
 from boto.connection import AWSQueryConnection
+from boto.iam.user import User
 
 
 ASSUME_ROLE_POLICY_DOCUMENT = json.dumps({
@@ -359,11 +356,14 @@ class IAMConnection(AWSQueryConnection):
         :type user_name: string
         :param user_name: The name of the user to delete.
             If not specified, defaults to user making request.
+
+        :rtype: :class:`boto.iam.user.User`
+        :return: The requested User instance
         """
         params = {}
         if user_name:
             params['UserName'] = user_name
-        return self.get_response('GetUser', params)
+        return self.get_object('GetUser', params, User)
 
     def update_user(self, user_name, new_user_name=None, new_path=None):
         """

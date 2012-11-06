@@ -20,7 +20,6 @@
 # IN THE SOFTWARE.
 #
 
-import boto.utils
 import urllib
 from boto.connection import AWSQueryConnection
 from boto.exception import BotoServerError
@@ -31,6 +30,7 @@ from boto.rds.parametergroup import ParameterGroup
 from boto.rds.dbsnapshot import DBSnapshot
 from boto.rds.event import Event
 from boto.rds.regioninfo import RDSRegionInfo
+from boto.rds.tag import RDSTag
 
 
 def regions():
@@ -82,8 +82,8 @@ def connect_to_region(region_name, **kw_params):
 class RDSConnection(AWSQueryConnection):
 
     DefaultRegionName = 'us-east-1'
-    DefaultRegionEndpoint = 'rds.us-east-1.amazonaws.com'
-    APIVersion = '2011-04-01'
+    DefaultRegionEndpoint = 'rds.amazonaws.com'
+    APIVersion = '2012-09-17'
 
     def __init__(self, aws_access_key_id=None, aws_secret_access_key=None,
                  is_secure=True, port=None, proxy=None, proxy_port=None,
@@ -175,8 +175,9 @@ class RDSConnection(AWSQueryConnection):
                           db_subnet_group_name = None,
                           license_model = None,
                           option_group_name = None,
+                          iops=None,
                           ):
-        # API version: 2012-04-23
+        # API version: 2012-09-17
         # Parameter notes:
         # =================
         # id should be db_instance_identifier according to API docs but has been left
@@ -362,6 +363,17 @@ class RDSConnection(AWSQueryConnection):
         :param option_group_name: Indicates that the DB Instance should be associated
                                   with the specified option group.
 
+        :type iops: int
+        :param iops:  The amount of IOPS (input/output operations per second) to Provisioned
+                      for the DB Instance. Can be modified at a later date.
+
+                      Must scale linearly. For every 1000 IOPS provision, you must allocated
+                      100 GB of storage space. This scales up to 1 TB / 10 000 IOPS for MySQL
+                      and Oracle. MSSQL is limited to 700 GB / 7 000 IOPS.
+
+                      If you specify a value, it must be at least 1000 IOPS and you must
+                      allocate 100 GB of storage.
+
         :rtype: :class:`boto.rds.dbinstance.DBInstance`
         :return: The new db instance.
         """
@@ -402,6 +414,7 @@ class RDSConnection(AWSQueryConnection):
                   'DBSubnetGroupName': db_subnet_group_name,
                   'Engine': engine,
                   'EngineVersion': engine_version,
+                  'Iops': iops,
                   'LicenseModel': license_model,
                   'MasterUsername': master_username,
                   'MasterUserPassword': master_password,
@@ -502,7 +515,8 @@ class RDSConnection(AWSQueryConnection):
                           backup_retention_period=None,
                           preferred_backup_window=None,
                           multi_az=False,
-                          apply_immediately=False):
+                          apply_immediately=False,
+                          iops=None):
         """
         Modify an existing DBInstance.
 
@@ -562,6 +576,17 @@ class RDSConnection(AWSQueryConnection):
         :param multi_az: If True, specifies the DB Instance will be
                          deployed in multiple availability zones.
 
+        :type iops: int
+        :param iops:  The amount of IOPS (input/output operations per second) to Provisioned
+                      for the DB Instance. Can be modified at a later date.
+
+                      Must scale linearly. For every 1000 IOPS provision, you must allocated
+                      100 GB of storage space. This scales up to 1 TB / 10 000 IOPS for MySQL
+                      and Oracle. MSSQL is limited to 700 GB / 7 000 IOPS.
+
+                      If you specify a value, it must be at least 1000 IOPS and you must
+                      allocate 100 GB of storage.
+
         :rtype: :class:`boto.rds.dbinstance.DBInstance`
         :return: The modified db instance.
         """
@@ -592,6 +617,8 @@ class RDSConnection(AWSQueryConnection):
             params['MultiAZ'] = 'true'
         if apply_immediately:
             params['ApplyImmediately'] = 'true'
+        if iops:
+            params['Iops'] = iops
 
         return self.get_object('ModifyDBInstance', params, DBInstance)
 
@@ -1170,3 +1197,70 @@ class RDSConnection(AWSQueryConnection):
         if marker:
             params['Marker'] = marker
         return self.get_list('DescribeEvents', params, [('Event', Event)])
+
+    def create_tags(self, dbinstance, tags):
+        """
+        Create new metadata tags for the specified RDS DBInstance.
+
+        At this moment an instance of :class:`boto.rds.dbinstance.DBInstance`
+        must be specified, since the AddTagsToResource API call needs an ARN.
+
+        :type dbinstance: :class:`boto.rds.dbinstance.DBInstance`
+        :param dbinstance: The dbinstance to get the tags for
+
+        :type tags: dict
+        :param tags: A dictionary containing the name/value pairs.
+                     If you want to create only a tag name, the
+                     value for that tag should be the empty string
+                     (e.g. '').
+        """
+        assert isinstance(dbinstance, DBInstance)
+
+        params = {'ResourceName': dbinstance.arn}
+
+        for i, (key, value) in enumerate(tags.items()):
+            params['Tags.member.%d.Key'   % (i + 1)] = key
+            params['Tags.member.%d.Value' % (i + 1)] = value
+
+        return self.get_status('AddTagsToResource', params, verb='POST')
+
+    def delete_tags(self, dbinstance, tags):
+        """
+        Delete metadata tags for the specified RDS DBInstance id.
+
+        At this moment an instance of :class:`boto.rds.dbinstance.DBInstance`
+        must be specified, since the AddTagsToResource API call needs an ARN.
+
+        :type dbinstance: :class:`boto.rds.dbinstance.DBInstance`
+        :param dbinstance: The dbinstance to get the tags for
+
+        :type tags: list
+        :param tags: A list containing the names of the tags to delete
+        """
+
+        assert isinstance(dbinstance, DBInstance)
+
+        params = {'ResourceName': dbinstance.arn}
+
+        for i, key in enumerate(tags):
+            params['TagKeys.member.%d' % (i + 1)] = key
+
+        return self.get_status('RemoveTagsFromResource', params, verb='POST')
+
+    def get_dbinstance_tags(self, dbinstance):
+        """
+        Get all metadata tags for the specified RDS DBInstance.
+
+        At this moment an instance of :class:`boto.rds.dbinstance.DBInstance`
+        must be specified, since the ListTagsForResource API call needs an ARN.
+
+        :type dbinstance: :class:`boto.rds.dbinstance.DBInstance`
+        :param dbinstance: The dbinstance to get the tags for
+        """
+        assert isinstance(dbinstance, DBInstance)
+
+        params = {'ResourceName': dbinstance.arn}
+
+        return self.get_list('ListTagsForResource', params,
+                [('Tag', RDSTag)])
+

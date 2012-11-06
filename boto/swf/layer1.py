@@ -22,17 +22,14 @@
 # IN THE SOFTWARE.
 #
 
+import time
+
 import boto
 from boto.connection import AWSAuthConnection
 from boto.provider import Provider
 from boto.exception import SWFResponseError
 from boto.swf import exceptions as swf_exceptions
-
-import time
-try:
-    import simplejson as json
-except ImportError:
-    import json
+from boto.compat import json
 
 #
 # To get full debug output, uncomment the following line and set the
@@ -1152,8 +1149,8 @@ class Layer1(AWSAuthConnection):
         return self.make_request('CountOpenWorkflowExecutions', json_input)
 
     def list_open_workflow_executions(self, domain,
+                                      oldest_date,
                                       latest_date=None,
-                                      oldest_date=None,
                                       tag=None,
                                       workflow_id=None,
                                       workflow_name=None,

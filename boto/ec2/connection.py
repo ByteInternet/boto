@@ -65,7 +65,7 @@ from boto.exception import EC2ResponseError
 
 class EC2Connection(AWSQueryConnection):
 
-    APIVersion = boto.config.get('Boto', 'ec2_version', '2012-08-15')
+    APIVersion = boto.config.get('Boto', 'ec2_version', '2012-10-01')
     DefaultRegionName = boto.config.get('Boto', 'ec2_region_name', 'us-east-1')
     DefaultRegionEndpoint = boto.config.get('Boto', 'ec2_region_endpoint',
                                             'ec2.us-east-1.amazonaws.com')
@@ -854,6 +854,7 @@ class EC2Connection(AWSQueryConnection):
             * userData - Base64 encoded String (None)
             * disableApiTermination - Boolean (true)
             * instanceInitiatedShutdownBehavior - stop|terminate
+            * blockDeviceMapping - List of strings - ie: ['/dev/sda=false']
             * sourceDestCheck - Boolean (true)
             * groupSet - Set of Security Groups or IDs
             * ebsOptimized - Boolean (false)
@@ -883,6 +884,12 @@ class EC2Connection(AWSQueryConnection):
                 if isinstance(sg, SecurityGroup):
                     sg = sg.id
                 params['GroupId.%s' % (idx + 1)] = sg
+        elif attribute.lower() == 'blockdevicemapping':
+            for idx, kv in enumerate(value):
+                dev_name, _, flag = kv.partition('=')
+                pre = 'BlockDeviceMapping.%d' % (idx + 1)
+                params['%s.DeviceName' % pre] = dev_name
+                params['%s.Ebs.DeleteOnTermination' % pre] = flag or 'true'
         else:
             # for backwards compatibility handle lowercase first letter
             attribute = attribute[0].upper() + attribute[1:]
